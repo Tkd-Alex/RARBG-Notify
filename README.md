@@ -1,12 +1,12 @@
-# TNT-Notify
+# RARBG-Notify
 
-<img align="left" src="https://github.com/SantinoI/TNT-Notify/blob/master/tntNotify.png" width ='130'>
+<img align="left" src="https://github.com/Tkd-Alex/RARBG-Notify/blob/master/rarbgNotify.jpg" width ='130'>
 
-**TNT-Notify**  is a bot telegram that allows you to receive a notification when a new episode of your favorite TV series is online on tnt-village.
+**RARBG-Notify**  is a bot telegram that allows you to receive a notification when a new torrent is avaiable on rarbg.
 
-🎬 🔔
+⏬ 🔔
 
-You can try it [@tntnotify_bot](https://telegram.me/tntnotify_bot)
+You can try it [@rarbgnotify_bot](https://telegram.me/rarbgnotify_bot)
 
 
 Currently it has the following commands:
@@ -16,4 +16,3 @@ Currently it has the following commands:
 | /set    | \<name\>   | Insert a new serie.                     |
 | /unset  |            | Show the list of series and delete one. |
 | /check  |            | Check if there are updates              |
-| /last   | \<number\> | Show the last number series uploaded.   |

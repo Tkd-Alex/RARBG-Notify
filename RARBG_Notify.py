@@ -52,26 +52,29 @@ def set(bot, update, args, job_queue):
     else:
         update.message.reply_text('Usage: /set <name>')
 
-def headersproxy():
+def newsession():
+    s = requests.Session()
     ua = UserAgent()
-    headers = {'User-Agent': ua.random}
+    s.headers.update({'User-Agent': ua.random})
     proxy = random.choice(PROXIES)
     proxy = {"http": "http://" + proxy, "https": "http://" + proxy}
-    return headers, proxy
+    s.proxies.update(proxy)
+    return s
 
 def now(bot, update, job_queue):
     user = db.users.find_one({"telegramid": update.message.chat_id}) 
     notify = False
     for value in user['torrentlist']:
-        headers, proxy = headersproxy()
-        torrents = scraper(value, headers, proxy)
+        session = newsession()
+        session.get(LINK) # Preload session
+        torrents = scraper(value, session)
 
         for torrent in torrents:
             notify = True
             description = "Seeders: <b>{}</b> Leechers: <b>{}</b> Size: <b>{}</b>".format(torrent["seeders"], torrent["leechers"], torrent["size"])
             bot.send_message(update.message.chat_id, text="<b>Torrent found:</b>\n{}\n<b>Info:</b>\n{}\n<a href='{}'>Link Torrent</a>".format(torrent['title'].encode("utf-8"), description.encode("utf-8"), torrent['link']), parse_mode="HTML")
 
-            filename = downloadtorrent(torrent, headers, proxy)
+            filename = downloadtorrent(torrent, session)
             if not filename is None:
                 bot.send_document(update.message.chat_id, document=open(filename, 'rb'))
                 os.remove(filename)
@@ -82,10 +85,10 @@ def now(bot, update, job_queue):
     else:
         bot.send_message(update.message.chat_id, text="Sorry, no new torrent avaiable")
 
-def downloadtorrent(torrent, headers, proxy):
+def downloadtorrent(torrent, session):
     args = { 'id': torrent['id'], 'f' : "{}-[rarbg.to].torrent".format(torrent['title']) }
     torrentlink = "https://rarbg.to/download.php?{}".format( urllib.parse.urlencode(args) )
-    filerequest = requests.get(torrentlink, headers=headers, proxies=proxy)
+    filerequest = session.get(torrentlink)
     if(filerequest.status_code == 200):
         filename = filerequest.headers.get('Content-Disposition').replace('attachment; filename="', "").replace('"', "")
         with open(filename, 'wb') as f:
@@ -93,8 +96,8 @@ def downloadtorrent(torrent, headers, proxy):
         return filename
     return None    
 
-def scraper(torrentitem, headers, proxy):
-    r = requests.get(LINK + torrentitem['name'].replace(" ", "+"), headers=headers, proxies=proxy)
+def scraper(torrentitem, session):
+    r = session.get(LINK +  "+".join(torrentitem['title']))
     if r.status_code == 200:
         torrents = []
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -105,28 +108,29 @@ def scraper(torrentitem, headers, proxy):
             linktorrent = tds[1].find("a", {"onmouseout":"return nd();"})
             title = linktorrent['title']
             if not title in torrentitem["lastnotify"]:
-                if all(ext in re.sub('[^0-9a-zA-Z]+', '', title.lower()) for ext in torrentitem["title"]):
-                    torrent = {
-                        "title": title,
-                        "link": "https://rarbg.to" + linktorrent['title'] ,
-                        "id": linktorrent['title'].replace('/torrent/', ""),
-                        "size": tds[3].text,
-                        "seeders": tds[4].text,
-                        "leechers":  tds[5].text
-                    }
-                    torrents.append(torrent)
+                torrent = {
+                    "title": title,
+                    "link": "https://rarbg.to" + linktorrent['href'] ,
+                    "id": linktorrent['href'].replace('/torrent/', ""),
+                    "size": tds[3].text,
+                    "seeders": tds[4].text,
+                    "leechers":  tds[5].text
+                }
+                torrents.append(torrent)
     return torrents
 
 def check(bot, job):
     user = db.users.find_one({"telegramid": job.context}) 
     for value in user['torrentlist']:
-        headers, proxy = headersproxy()
-        torrents = scraper(value, headers, proxy)
+        session = newsession()
+        session.get(LINK) # Preload session
+        torrents = scraper(value, session)
+
         for torrent in torrents:
             description = "Seeders: <b>{}</b> Leechers: <b>{}</b> Size: <b>{}</b>".format(torrent["seeders"], torrent["leechers"], torrent["size"])
             bot.send_message(job.context, text="<b>Torrent found:</b>\n{}\n<b>Info:</b>\n{}\n<a href='{}'>Link Torrent</a>".format(torrent['title'].encode("utf-8"), description.encode("utf-8"), torrent['link']), parse_mode="HTML")
 
-            filename = downloadtorrent(torrent, headers, proxy)
+            filename = downloadtorrent(torrent, session)
             if not filename is None:
                 bot.send_document(job.context, document=open(filename, 'rb'))
                 os.remove(filename)
@@ -170,7 +174,7 @@ def startall(job_queue):
     for u in users:
         for value in u['torrentlist']:
             for h in hours:
-                job_queue.run_daily(check, datetime.time(h, 00, 00), context=u['telegramid'], name="{}_{}_{}".format(u['telegramid'], value['name'], h))
+                job_queue.run_daily(check, datetime.time(h, 00, 00), context=u['telegramid'], name="{}_{}_{}".format(u['telegramid'], value['title'], h))
 
 def error(bot, update, error):
     logger.warn('update={}, error={}'.format(update, error))
