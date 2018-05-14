@@ -141,14 +141,15 @@ def check(bot, job):
 def unset(bot, update):
     user = db.users.find_one({"telegramid": update.message.chat_id}) 
     if user == None or len(user['torrentlist']) == 0:  
+        update.message.reply_text("You haven't a torrent. Use /set <name>")
+    else: 
         keyboard = []
         for value in user['torrentlist']:
             keyboard.append([InlineKeyboardButton(value["originalname"], callback_data="{}".format(value["title"]) )])
         
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text('Select the torrent to delete:', reply_markup=reply_markup)
-    else: 
-        update.message.reply_text("You haven't a torrent. Use /set <name>")
+        
 
 def button(bot, update, job_queue):
     query = update.callback_query
