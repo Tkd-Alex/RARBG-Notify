@@ -1,0 +1,6 @@
+copy this file, rename into proxy.list and paste a list (or one) proxy, example:
+
+1xx.274.xx4.119:5645
+1xx.347.xx9.449:5645
+username:password@1x9.6x.xx6.222:x645
+username:password@16x.231.99.xx1:x645
