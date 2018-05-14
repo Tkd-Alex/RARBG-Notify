@@ -11,8 +11,8 @@ You can try it [@rarbgnotify_bot](https://telegram.me/rarbgnotify_bot)
 
 Currently it has the following commands:
 
-| Command | Parameters | Description                             |
-|---------|------------|-----------------------------------------|
-| /set    | \<name\>   | Insert a new serie.                     |
-| /unset  |            | Show the list of series and delete one. |
-| /check  |            | Check if there are updates              |
+| Command | Parameters | Description                              |
+|---------|------------|------------------------------------------|
+| /set    | \<name\>   | Insert a new torrent.                    |
+| /unset  |            | Show the list of torrent and delete one. |
+| /check  |            | Check if there are new torrent online.   |
