@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging, requests, re, time, os, datetime, sqlite3, random, urllib.parse
+import logging, requests, re, time, os, datetime, sqlite3, random, urllib.parse, ast
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from pprint import pprint
@@ -153,18 +153,20 @@ def unset(bot, update):
 
 def button(bot, update, job_queue):
     query = update.callback_query
-    
-    for h in hours:
-        job = job_queue.get_jobs_by_name("{}_{}_{}".format(update.message.chat_id, query.data, h))
-        job.schedule_removal()
 
-    user = db.users.find_one({"telegramid": update.message.chat_id})
+    for h in hours:
+        jobs = job_queue.get_jobs_by_name("{}_{}_{}".format(query.message.chat_id, query.data, h))
+        for job in jobs:
+            job.schedule_removal()
+
+    user = db.users.find_one({"telegramid": query.message.chat_id})
     for value in user['torrentlist']:
-        if value['title'] == query.data:
+        querylist = ast.literal_eval(query.data)
+        if value['title'] == querylist:
             torrenttitle = value['originalname'] 
             break
     
-    db.users.update_one({"_id": user['_id']}, { '$pull': { 'torrentlist': { 'name': query.data} } })
+    db.users.update_one({"_id": user['_id']}, { '$pull': { 'torrentlist': { 'originalname': torrenttitle} } })
 
     bot.edit_message_text(text="Torrent delete: {}".format(torrenttitle),
                           chat_id=query.message.chat_id,
