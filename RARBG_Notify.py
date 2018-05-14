@@ -128,6 +128,13 @@ def button(bot, update, job_queue):
                           chat_id=query.message.chat_id,
                           message_id=query.message.message_id)
 
+def startall(job_queue):
+    users = db.users.find({})
+    for u in users:
+        for value in u['torrentlist']:
+            for h in hours:
+                job_queue.run_daily(check, datetime.time(h, 00, 00), context=u['telegramid'], name="{}_{}_{}".format(u['telegramid'], value['name'], h))
+
 def error(bot, update, error):
     logger.warn('update={}, error={}'.format(update, error))
 
@@ -145,6 +152,8 @@ if __name__ == '__main__':
     dp.add_handler(CommandHandler("check", _check, pass_job_queue=True))
     
     dp.add_error_handler(error)
+
+    startall(updater.job_queue)
     
     updater.start_polling()
     updater.idle()
