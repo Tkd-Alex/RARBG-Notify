@@ -70,7 +70,7 @@ def now(bot, update, job_queue):
     session.get(LINK) # Preload session
         
     for value in user['torrentlist']:
-        sleep(60)
+        sleep(15)
         torrents = scraper(value, session)
         for torrent in torrents:
             notify = True
@@ -101,7 +101,7 @@ def downloadtorrent(torrent, session):
 
 def scraper(torrentitem, session):
     r = session.get(LINK +  "+".join(torrentitem['title']))
-    sleep(10)
+    sleep(5)
     if r.status_code == 200:
         torrents = []
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -130,7 +130,7 @@ def check(bot, job):
     session.get(LINK) # Preload session
     
     for value in user['torrentlist']:
-        sleep(60)
+        sleep(15)
         torrents = scraper(value, session)
         for torrent in torrents:
             description = "Seeders: <b>{}</b> Leechers: <b>{}</b> Size: <b>{}</b>".format(torrent["seeders"], torrent["leechers"], torrent["size"])
