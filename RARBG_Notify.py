@@ -65,7 +65,7 @@ def newsession():
     
     return s
 
-def now(bot, update, job_queue):
+def now(bot, update):
     user = db.users.find_one({"telegramid": update.message.chat_id}) 
     notify = False
     
@@ -105,7 +105,7 @@ def downloadtorrent(torrent, session):
 def scraper(torrentitem, session):
     
     fulllink = LINK +  "+".join(torrentitem['title'])
-    print("{} get={}".format(datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'), fulllink))
+    print("{} get={}".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), fulllink))
     r = session.get(fulllink)
     sleep(0.5)
     
@@ -135,6 +135,8 @@ def check(bot, job):
 
     session = newsession()
     r = session.get(LINK, allow_redirects=True)
+
+    print(r)
     
     for value in user['torrentlist']:
         sleep(1)
@@ -163,7 +165,6 @@ def unset(bot, update):
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text('Select the torrent to delete:', reply_markup=reply_markup)
         
-
 def button(bot, update, job_queue):
     query = update.callback_query
 
@@ -206,7 +207,7 @@ if __name__ == '__main__':
     dp.add_handler(CallbackQueryHandler(button, pass_job_queue=True))
     
     dp.add_handler(CommandHandler("set", set, pass_args=True, pass_job_queue=True))
-    dp.add_handler(CommandHandler("check", now, pass_job_queue=True))
+    dp.add_handler(CommandHandler("check", now))
     
     dp.add_error_handler(error)
 
