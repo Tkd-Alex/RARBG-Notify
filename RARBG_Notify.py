@@ -8,6 +8,7 @@ from pprint import pprint
 from pymongo import MongoClient
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+from time import sleep
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -64,11 +65,13 @@ def newsession():
 def now(bot, update, job_queue):
     user = db.users.find_one({"telegramid": update.message.chat_id}) 
     notify = False
+    
+    session = newsession()
+    session.get(LINK) # Preload session
+        
     for value in user['torrentlist']:
-        session = newsession()
-        session.get(LINK) # Preload session
+        sleep(60)
         torrents = scraper(value, session)
-
         for torrent in torrents:
             notify = True
             description = "Seeders: <b>{}</b> Leechers: <b>{}</b> Size: <b>{}</b>".format(torrent["seeders"], torrent["leechers"], torrent["size"])
@@ -121,11 +124,13 @@ def scraper(torrentitem, session):
 
 def check(bot, job):
     user = db.users.find_one({"telegramid": job.context}) 
-    for value in user['torrentlist']:
-        session = newsession()
-        session.get(LINK) # Preload session
-        torrents = scraper(value, session)
 
+    session = newsession()
+    session.get(LINK) # Preload session
+    
+    for value in user['torrentlist']:
+        sleep(60)
+        torrents = scraper(value, session)
         for torrent in torrents:
             description = "Seeders: <b>{}</b> Leechers: <b>{}</b> Size: <b>{}</b>".format(torrent["seeders"], torrent["leechers"], torrent["size"])
             bot.send_message(job.context, text="<b>Torrent found:</b>\n{}\n<b>Info:</b>\n{}\n<a href='{}'>Link Torrent</a>".format(torrent['title'].encode("utf-8"), description.encode("utf-8"), torrent['link']), parse_mode="HTML")
