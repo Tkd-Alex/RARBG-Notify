@@ -55,11 +55,14 @@ def set(bot, update, args, job_queue):
 
 def newsession():
     s = requests.Session()
+    
     ua = UserAgent()
     s.headers.update({'User-Agent': ua.random})
+    
     proxy = random.choice(PROXIES)
     proxy = {"http": "http://" + proxy, "https": "http://" + proxy}
     s.proxies.update(proxy)
+    
     return s
 
 def now(bot, update, job_queue):
@@ -67,8 +70,8 @@ def now(bot, update, job_queue):
     notify = False
     
     session = newsession()
-    session.get(LINK) # Preload session
-        
+    r = session.get(LINK, allow_redirects=True)
+    
     for value in user['torrentlist']:
         sleep(1)
         torrents = scraper(value, session)
@@ -100,8 +103,12 @@ def downloadtorrent(torrent, session):
     return None    
 
 def scraper(torrentitem, session):
-    r = session.get(LINK +  "+".join(torrentitem['title']))
+    
+    fulllink = LINK +  "+".join(torrentitem['title'])
+    print("{} get={}".format(datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'), fulllink))
+    r = session.get(fulllink)
     sleep(0.5)
+    
     if r.status_code == 200:
         torrents = []
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -127,7 +134,7 @@ def check(bot, job):
     user = db.users.find_one({"telegramid": job.context}) 
 
     session = newsession()
-    session.get(LINK) # Preload session
+    r = session.get(LINK, allow_redirects=True)
     
     for value in user['torrentlist']:
         sleep(1)
