@@ -101,6 +101,7 @@ def downloadtorrent(torrent, session):
 
 def scraper(torrentitem, session):
     r = session.get(LINK +  "+".join(torrentitem['title']))
+    sleep(10)
     if r.status_code == 200:
         torrents = []
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -134,7 +135,7 @@ def check(bot, job):
         for torrent in torrents:
             description = "Seeders: <b>{}</b> Leechers: <b>{}</b> Size: <b>{}</b>".format(torrent["seeders"], torrent["leechers"], torrent["size"])
             bot.send_message(job.context, text="<b>Torrent found:</b>\n{}\n<b>Info:</b>\n{}\n<a href='{}'>Link Torrent</a>".format(torrent['title'].encode("utf-8"), description.encode("utf-8"), torrent['link']), parse_mode="HTML")
-
+    
             filename = downloadtorrent(torrent, session)
             if not filename is None:
                 bot.send_document(job.context, document=open(filename, 'rb'))
