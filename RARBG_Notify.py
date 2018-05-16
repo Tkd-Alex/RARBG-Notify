@@ -135,8 +135,6 @@ def check(bot, job):
 
     session = newsession()
     r = session.get(LINK, allow_redirects=True)
-
-    print(r)
     
     for value in user['torrentlist']:
         sleep(1)
